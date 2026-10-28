@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tes Huruf Hilang - Retro Edition</title>
+    <title>Tes Huruf Hilang (Retro Edition)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -391,14 +391,13 @@
             <div class="window-title-text">Results</div>
         </div>
         <div class="window-content">
-            <h1 style="margin-bottom: 10px;">Tes Selesai</h1>
-            <h2 id="final-score-display" style="margin-bottom: 20px;"></h2>
+            <h1 style="margin-bottom: 20px;">Tes Selesai</h1>
             
             <div class="stats-box">
                 <p><b>Rata-rata (Mean):</b> <span id="stats-mean"></span> soal/set</p>
                 <p><b>Varians:</b> <span id="stats-variance"></span></p>
                 <p><b>Standar Deviasi:</b> <span id="stats-stddev"></span></p>
-                <p><b>Tingkat Kestabilan:</b> <span id="stats-interpretation"></span></p>
+                <p><b>Tingkat Kestabilan:</b> <br><span id="stats-interpretation"></span></p>
             </div>
 
             <p style="font-weight: bold; margin-bottom: 5px;">Grafik Performa Anda:</p>
@@ -707,7 +706,6 @@
             
             // Calculate Total
             const totalScore = state.scores.reduce((acc, val) => acc + val, 0);
-            const maxScore = state.totalSets * QUESTIONS_PER_SET;
             
             // Calculate Mean (Rata-rata)
             const mean = totalScore / state.totalSets;
@@ -725,16 +723,17 @@
 
             // Determine Stability Interpretation
             let stabilityText = "";
-            if (stdDev < 3) {
-                stabilityText = "Sangat Stabil (Konsentrasi Sangat Baik)";
-            } else if (stdDev <= 5) {
-                stabilityText = "Cukup Stabil (Ada Sedikit Fluktuasi)";
+            if (stdDev <= 1.5) {
+                stabilityText = "Sangat Baik / Sangat Stabil (Sangat konsisten, tahan terhadap kelelahan, kontrol emosi sangat baik)";
+            } else if (stdDev <= 2.5) {
+                stabilityText = "Baik / Stabil (Fluktuasi normal, stamina dan fokus standar)";
+            } else if (stdDev <= 4.0) {
+                stabilityText = "Rata-rata (Terlihat ada puncak dan lembah; rentan terhadap gangguan sedang atau kelelahan)";
             } else {
-                stabilityText = "Kurang Stabil (Performa Tidak Konsisten)";
+                stabilityText = "Kurang / Tidak Stabil (Reaktivitas emosi tinggi, mudah bosan, atau cepat lelah di bawah tekanan)";
             }
 
             // Display Values
-            document.getElementById('final-score-display').innerText = `Skor Total: ${totalScore} / ${maxScore}`;
             document.getElementById('stats-mean').innerText = mean.toFixed(2);
             document.getElementById('stats-variance').innerText = variance.toFixed(2);
             document.getElementById('stats-stddev').innerText = stdDev.toFixed(2);
