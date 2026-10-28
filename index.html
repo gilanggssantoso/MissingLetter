@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tes Huruf Hilang (Retro Edition)</title>
+    <title>Tes Huruf Hilang - Retro Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -141,17 +141,29 @@
             cursor: pointer;
             box-shadow: 2px 2px 0px var(--border-color);
             transition: none;
-        }
-
-        button:hover, button:active {
-            background-color: var(--text-color);
-            color: var(--bg-color);
-            box-shadow: 0px 0px 0px var(--border-color);
-            transform: translate(2px, 2px);
+            -webkit-tap-highlight-color: transparent; /* Removes default blue tap highlight on mobile */
         }
         
         select:focus {
             outline: none;
+        }
+
+        /* Hover effect only applied to devices that support hovering (mouse/trackpad) */
+        @media (hover: hover) {
+            button:hover {
+                background-color: var(--text-color);
+                color: var(--bg-color);
+                box-shadow: 0px 0px 0px var(--border-color);
+                transform: translate(2px, 2px);
+            }
+        }
+
+        /* Active effect applies to physical clicks and screen taps */
+        button:active {
+            background-color: var(--text-color);
+            color: var(--bg-color);
+            box-shadow: 0px 0px 0px var(--border-color);
+            transform: translate(2px, 2px);
         }
 
         .btn-restart {
@@ -265,25 +277,31 @@
             font-size: 1.2rem;
         }
 
-        /* Mobile Responsive Adjustments */
-        @media (max-width: 500px) {
+        /* Mobile Responsive Adjustments - Fluid Layout */
+        @media (max-width: 600px) {
+            body {
+                padding: 5px; /* Reclaim space for smaller screens */
+            }
             .window-content {
-                padding: 15px 10px;
+                padding: 15px 5px; /* Maximize internal width */
             }
             .symbol-box, .option-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 24px;
+                /* Dynamically scales based on screen width (vw), but caps at 65px */
+                width: clamp(35px, 15vw, 65px);
+                height: clamp(35px, 15vw, 65px);
+                font-size: clamp(20px, 6vw, 36px);
             }
             .symbols-row, .options-row {
-                gap: 8px;
+                /* Dynamically scaled gaps to prevent wrapping */
+                gap: clamp(4px, 2vw, 15px);
+                margin: 20px 0;
             }
             .timer {
                 font-size: 2rem;
                 padding: 5px 15px;
             }
             .symbol-label {
-                font-size: 1rem;
+                font-size: clamp(0.9rem, 4vw, 1.2rem);
             }
             .btn-restart {
                 font-size: 0.9rem;
@@ -292,17 +310,6 @@
             .stats-box {
                 font-size: 1rem;
                 padding: 15px;
-            }
-        }
-        
-        @media (max-width: 360px) {
-            .symbol-box, .option-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 20px;
-            }
-            .symbols-row, .options-row {
-                gap: 5px;
             }
         }
     </style>
