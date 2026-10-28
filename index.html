@@ -297,18 +297,19 @@
         <div class="window-content">
             <h1 style="margin-bottom: 20px;">Tes Huruf Hilang</h1>
             <ul class="instructions">
-                <li>Anda akan menyelesaikan 10 set, masing-masing 50 soal.</li>
-                <li>Sebelum setiap set, Anda memiliki waktu 10 detik untuk menghafal 5 huruf yang dipasangkan dengan opsi A, B, C, D, dan E.</li>
+                <li>Anda akan menyelesaikan tes sesuai jumlah set yang dipilih.</li>
+                <li>Setiap set berisi 50 soal dan berdurasi <b>1 menit</b>.</li>
+                <li>Sebelum setiap set, Anda memiliki waktu 10 detik untuk menghafal 5 huruf.</li>
                 <li>Identifikasi huruf mana yang hilang dari kelompok 4 huruf yang ditampilkan.</li>
             </ul>
             
             <div class="settings-group">
-                <label for="time-select" style="font-weight:bold; display:block; margin-bottom:10px;">Total Waktu Tes:</label>
-                <select id="time-select">
-                    <option value="60">10 Menit (60 detik/set)</option>
-                    <option value="48">8 Menit (48 detik/set)</option>
-                    <option value="30">5 Menit (30 detik/set)</option>
-                    <option value="18">3 Menit (18 detik/set)</option>
+                <label for="set-select" style="font-weight:bold; display:block; margin-bottom:10px;">Pilih Total Waktu/Set:</label>
+                <select id="set-select">
+                    <option value="10">10 Menit (10 Set)</option>
+                    <option value="8">8 Menit (8 Set)</option>
+                    <option value="5">5 Menit (5 Set)</option>
+                    <option value="3">3 Menit (3 Set)</option>
                 </select>
             </div>
             
@@ -326,7 +327,7 @@
     <!-- MEMORIZE SCREEN -->
     <div id="memorize-screen" class="screen">
         <div class="window-title-bar">
-            <div class="window-title-text" id="memorize-set-title">Set 1 / 10</div>
+            <div class="window-title-text" id="memorize-set-title">Set 1 / X</div>
         </div>
         <div class="window-content">
             <p>Hafalkan huruf-huruf berikut:</p>
@@ -338,7 +339,7 @@
     <!-- TEST SCREEN -->
     <div id="test-screen" class="screen">
         <div class="window-title-bar">
-            <div class="window-title-text" id="test-set-title">Set 1 / 10</div>
+            <div class="window-title-text" id="test-set-title">Set 1 / X</div>
         </div>
         <div class="window-content">
             <div class="timer" id="test-timer">60</div>
@@ -370,7 +371,7 @@
         <div class="window-content">
             <h1>Tes Selesai</h1>
             <h2 id="final-score-display"></h2>
-            <p>Performa Anda di 10 set:</p>
+            <p>Performa Anda:</p>
             <div class="chart-container">
                 <canvas id="resultsChart"></canvas>
             </div>
@@ -384,13 +385,9 @@
         const LETTER_POOL = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz'.split('');
         const OPTIONS = ['A', 'B', 'C', 'D', 'E'];
         
-        const TOTAL_SETS = 10;
         const QUESTIONS_PER_SET = 50;
-        const MAX_TOTAL_SCORE = TOTAL_SETS * QUESTIONS_PER_SET;
         const MEMORIZE_DURATION = 10;
-        
-        // Will be updated dynamically based on user selection
-        let TEST_DURATION = 60; 
+        const TEST_DURATION = 60; // Always 1 minute per set
 
         let state = {
             phase: 'start', 
@@ -402,13 +399,14 @@
             currentMissingLetter: '',
             questionChars: [],
             timeLeft: 0,
-            testDurationSetting: 60
+            totalSets: 10 // Default
         };
 
         let timerInterval = null;
         let chartInstance = null;
         const restartBtn = document.getElementById('restart-btn');
 
+        // Apply retro font to Chart.js
         Chart.defaults.font.family = '"Chicago", "Geneva", "Arial", sans-serif';
         Chart.defaults.color = '#000';
 
@@ -420,9 +418,11 @@
         function saveScoreToHistory(scoresArray) {
             const history = getHistory();
             const totalScore = scoresArray.reduce((acc, val) => acc + val, 0);
+            const maxScore = state.totalSets * QUESTIONS_PER_SET;
             const newEntry = {
                 date: new Date().toISOString(),
                 totalScore: totalScore,
+                maxScore: maxScore,
                 scores: scoresArray
             };
             history.unshift(newEntry);
@@ -439,3 +439,317 @@
         function renderHistory() {
             const history = getHistory();
             const section = document.getElementById('history-section');
+            const list = document.getElementById('history-list');
+            
+            if (history.length > 0) {
+                section.style.display = 'block';
+                list.innerHTML = history.map(entry => {
+                    const dateObj = new Date(entry.date);
+                    const dateStr = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    const timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    const entryMax = entry.maxScore || (entry.scores.length * QUESTIONS_PER_SET);
+                    return `
+                        <li class="history-item">
+                            <span class="history-date">${dateStr} ${timeStr}</span>
+                            <span class="history-score">${entry.totalScore} / ${entryMax}</span>
+                        </li>
+                    `;
+                }).join('');
+            } else {
+                section.style.display = 'none';
+                list.innerHTML = '';
+            }
+        }
+
+        window.onload = () => {
+            renderHistory();
+            const savedState = sessionStorage.getItem('missingLettersTestState');
+            if (savedState) {
+                state = JSON.parse(savedState);
+                resumeTestFromState();
+            } else {
+                showScreen('start-screen');
+            }
+        };
+
+        function saveState() {
+            sessionStorage.setItem('missingLettersTestState', JSON.stringify(state));
+        }
+
+        function clearState() {
+            sessionStorage.removeItem('missingLettersTestState');
+        }
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            if (screenId === 'start-screen') {
+                restartBtn.style.display = 'none';
+            } else {
+                restartBtn.style.display = 'block';
+            }
+        }
+
+        function resetTest() {
+            if(confirm("Apakah Anda yakin ingin mengulang tes dari awal? Semua progres sesi ini akan hilang.")) {
+                clearInterval(timerInterval);
+                clearState();
+                state = {
+                    phase: 'start',
+                    currentSet: 1,
+                    questionsAnswered: 0,
+                    currentScore: 0,
+                    scores: [],
+                    currentSymbols: [],
+                    currentMissingLetter: '',
+                    questionChars: [],
+                    timeLeft: 0,
+                    totalSets: 10
+                };
+                renderHistory();
+                showScreen('start-screen');
+            }
+        }
+
+        function goToStart() {
+            clearState();
+            state.phase = 'start';
+            renderHistory();
+            showScreen('start-screen');
+        }
+
+        function startTest() {
+            state.currentSet = 1;
+            state.scores = [];
+            
+            const setSelect = document.getElementById('set-select');
+            state.totalSets = parseInt(setSelect.value);
+            
+            startNextSet();
+        }
+
+        function startNextSet() {
+            if (state.currentSet > state.totalSets) {
+                state.phase = 'result';
+                saveState();
+                saveScoreToHistory(state.scores);
+                showResults();
+                return;
+            }
+
+            state.questionsAnswered = 0;
+            state.currentScore = 0;
+
+            let shuffledPool = shuffle([...LETTER_POOL]);
+            state.currentSymbols = OPTIONS.map((opt, index) => {
+                return { letter: opt, char: shuffledPool[index] };
+            });
+
+            state.phase = 'memorize';
+            state.timeLeft = MEMORIZE_DURATION;
+            saveState();
+            
+            renderMemorizePhase();
+            startTimer(() => {
+                state.phase = 'test';
+                state.timeLeft = TEST_DURATION;
+                saveState();
+                renderTestPhase();
+            });
+        }
+
+        function renderMemorizePhase() {
+            showScreen('memorize-screen');
+            document.getElementById('memorize-set-title').innerText = `Set ${state.currentSet} / ${state.totalSets}`;
+            
+            const container = document.getElementById('memorize-symbols');
+            container.innerHTML = state.currentSymbols.map(sym => `
+                <div class="symbol-wrapper">
+                    <div class="symbol-box">${sym.char}</div>
+                    <div class="symbol-label">${sym.letter}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('memorize-timer').innerText = state.timeLeft;
+        }
+
+        function renderTestPhase() {
+            showScreen('test-screen');
+            document.getElementById('test-set-title').innerText = `Set ${state.currentSet} / ${state.totalSets}`;
+            
+            const refContainer = document.getElementById('reference-symbols');
+            refContainer.innerHTML = state.currentSymbols.map(sym => `
+                <div class="symbol-wrapper">
+                    <div class="symbol-box">${sym.char}</div>
+                    <div class="symbol-label">${sym.letter}</div>
+                </div>
+            `).join('');
+
+            if (state.questionsAnswered >= QUESTIONS_PER_SET) {
+                endSet();
+                return;
+            }
+
+            if (state.questionChars.length === 0) {
+                generateNewQuestionData();
+            }
+            
+            renderCurrentQuestion();
+            document.getElementById('test-timer').innerText = state.timeLeft;
+            
+            startTimer(() => {
+                endSet();
+            });
+        }
+
+        function startTimer(onComplete) {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                state.timeLeft--;
+                saveState();
+                
+                if (state.phase === 'memorize') {
+                    document.getElementById('memorize-timer').innerText = state.timeLeft;
+                } else if (state.phase === 'test') {
+                    document.getElementById('test-timer').innerText = state.timeLeft;
+                }
+
+                if (state.timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    onComplete();
+                }
+            }, 1000);
+        }
+
+        function generateNewQuestionData() {
+            const missingIndex = Math.floor(Math.random() * 5);
+            state.currentMissingLetter = state.currentSymbols[missingIndex].letter;
+            let chars = state.currentSymbols.filter((_, idx) => idx !== missingIndex).map(s => s.char);
+            state.questionChars = shuffle(chars);
+            saveState();
+        }
+
+        function renderCurrentQuestion() {
+            const qContainer = document.getElementById('question-symbols');
+            qContainer.innerHTML = state.questionChars.map(char => `
+                <div class="symbol-wrapper">
+                    <div class="symbol-box">${char}</div>
+                </div>
+            `).join('');
+        }
+
+        function submitAnswer(letter) {
+            if (letter === state.currentMissingLetter) {
+                state.currentScore++;
+            }
+            state.questionsAnswered++;
+            
+            if (state.questionsAnswered >= QUESTIONS_PER_SET) {
+                endSet();
+            } else {
+                generateNewQuestionData();
+                renderCurrentQuestion();
+            }
+        }
+
+        function endSet() {
+            clearInterval(timerInterval);
+            state.scores.push(state.currentScore);
+            state.currentSet++;
+            state.questionChars = [];
+            startNextSet();
+        }
+
+        function showResults() {
+            showScreen('result-screen');
+            clearState(); 
+            
+            const totalScore = state.scores.reduce((acc, val) => acc + val, 0);
+            const maxScore = state.totalSets * QUESTIONS_PER_SET;
+            document.getElementById('final-score-display').innerText = `Skor Total: ${totalScore} / ${maxScore}`;
+
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy(); 
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: state.totalSets}, (_, i) => `Set ${i + 1}`),
+                    datasets: [{
+                        label: 'Jawaban Benar',
+                        data: state.scores,
+                        borderColor: '#000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0, 
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#000',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 50,
+                            grid: { color: '#ccc' },
+                            ticks: { color: '#000' }
+                        },
+                        x: {
+                            grid: { color: '#ccc' },
+                            ticks: { color: '#000' }
+                        }
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            labels: { color: '#000' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function resumeTestFromState() {
+            const setSelect = document.getElementById('set-select');
+            if (state.totalSets) {
+                setSelect.value = state.totalSets;
+            }
+
+            if (state.phase === 'memorize') {
+                renderMemorizePhase();
+                startTimer(() => {
+                    state.phase = 'test';
+                    state.timeLeft = TEST_DURATION;
+                    saveState();
+                    renderTestPhase();
+                });
+            } else if (state.phase === 'test') {
+                renderTestPhase();
+            } else if (state.phase === 'result') {
+                showResults();
+            } else {
+                showScreen('start-screen');
+            }
+        }
+    </script>
+</body>
+</html>
