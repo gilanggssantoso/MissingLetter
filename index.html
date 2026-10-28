@@ -280,19 +280,17 @@
         /* Mobile Responsive Adjustments - Fluid Layout */
         @media (max-width: 600px) {
             body {
-                padding: 5px; /* Reclaim space for smaller screens */
+                padding: 5px; 
             }
             .window-content {
-                padding: 15px 5px; /* Maximize internal width */
+                padding: 15px 5px; 
             }
             .symbol-box, .option-btn {
-                /* Dynamically scales based on screen width (vw), but caps at 65px */
                 width: clamp(35px, 15vw, 65px);
                 height: clamp(35px, 15vw, 65px);
                 font-size: clamp(20px, 6vw, 36px);
             }
             .symbols-row, .options-row {
-                /* Dynamically scaled gaps to prevent wrapping */
                 gap: clamp(4px, 2vw, 15px);
                 margin: 20px 0;
             }
@@ -331,6 +329,7 @@
                 <li>Sebelum setiap set, Anda memiliki waktu 10 detik untuk mengingat 5 huruf.</li>
                 <li>Selanjutnya, akan ditampilkan 4 huruf saja dari kelima huruf tadi.</li>
                 <li>Identifikasi huruf mana yang tidak muncul (hilang) dalam kelompok 4 huruf tersebut.</li>
+                <li><b>Petunjuk:</b> Anda dapat menekan tombol A, B, C, D, E pada keyboard Anda untuk menjawab.</li>
             </ul>
             
             <div class="settings-group">
@@ -446,6 +445,34 @@
         // Apply retro font to Chart.js
         Chart.defaults.font.family = '"Chicago", "Geneva", "Arial", sans-serif';
         Chart.defaults.color = '#000';
+
+        // Keyboard Support
+        document.addEventListener('keydown', (event) => {
+            if (state.phase === 'test') {
+                const key = event.key.toUpperCase();
+                if (OPTIONS.includes(key)) {
+                    // Add quick visual flash to the button
+                    const buttons = document.querySelectorAll('.option-btn');
+                    buttons.forEach(btn => {
+                        if (btn.textContent === key) {
+                            btn.style.backgroundColor = 'var(--text-color)';
+                            btn.style.color = 'var(--bg-color)';
+                            btn.style.boxShadow = '0px 0px 0px var(--border-color)';
+                            btn.style.transform = 'translate(2px, 2px)';
+                            
+                            setTimeout(() => {
+                                btn.style.backgroundColor = '';
+                                btn.style.color = '';
+                                btn.style.boxShadow = '';
+                                btn.style.transform = '';
+                            }, 100);
+                        }
+                    });
+                    // Submit answer
+                    submitAnswer(key);
+                }
+            }
+        });
 
         function getHistory() {
             const history = localStorage.getItem('missingLettersHistory');
