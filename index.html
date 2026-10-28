@@ -3,22 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tes Huruf Hilang</title>
+    <title>Tes Huruf Hilang - Retro Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --text-color: #333;
-            --bg-color: #f9f9f9;
-            --border-color: #333;
-            --primary-color: #2c3e50;
-            --danger-color: #e74c3c;
-            --success-color: #27ae60;
+            --text-color: #000;
+            --bg-color: #fff;
+            --border-color: #000;
+            --window-bg: #fff;
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Classic Mac system fonts and disable anti-aliasing for a pixelated look */
+            font-family: "Chicago", "Geneva", "Arial", sans-serif;
+            -webkit-font-smoothing: none; 
+            font-smooth: never;
             color: var(--text-color);
-            background-color: var(--bg-color);
+            
+            /* Classic 50% gray dithered background pattern */
+            background-color: #cccccc;
+            background-image: 
+                repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000),
+                repeating-linear-gradient(45deg, #000 25%, #cccccc 25%, #cccccc 75%, #000 75%, #000);
+            background-position: 0 0, 2px 2px;
+            background-size: 4px 4px;
+            
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -29,8 +38,8 @@
         }
 
         h1, h2, h3 {
-            font-weight: 600;
-            color: var(--primary-color);
+            font-weight: bold;
+            color: var(--text-color);
         }
 
         .screen {
@@ -38,28 +47,49 @@
             width: 100%;
             max-width: 800px;
             margin-top: 40px;
-            background: #fff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            background: var(--window-bg);
+            border: 2px solid var(--border-color);
+            /* Hard offset shadow */
+            box-shadow: 4px 4px 0px rgba(0,0,0,1);
             box-sizing: border-box;
+            position: relative;
         }
 
         .screen.active {
             display: block;
-            animation: fadeIn 0.3s ease-in-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Retro Window Title Bar */
+        .window-title-bar {
+            height: 24px;
+            border-bottom: 2px solid var(--border-color);
+            background: repeating-linear-gradient(180deg, #fff, #fff 2px, #000 2px, #000 4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .window-title-text {
+            background: #fff;
+            padding: 0 15px;
+            border: 2px solid var(--border-color);
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .window-content {
+            padding: 30px;
         }
 
         .timer {
             font-size: 2.5rem;
             font-weight: bold;
             margin: 20px 0;
-            color: var(--primary-color);
+            border: 2px solid var(--border-color);
+            display: inline-block;
+            padding: 5px 20px;
+            background: #fff;
+            box-shadow: 2px 2px 0px var(--border-color);
         }
 
         .symbols-row {
@@ -85,8 +115,8 @@
             justify-content: center;
             align-items: center;
             font-size: 36px;
-            border-radius: 8px;
             background: #fff;
+            box-shadow: 2px 2px 0px var(--border-color);
         }
 
         .symbol-label {
@@ -107,58 +137,32 @@
             color: var(--text-color);
             padding: 12px 30px;
             font-size: 1.2rem;
-            font-weight: 600;
+            font-weight: bold;
+            font-family: inherit;
             cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.2s;
+            box-shadow: 2px 2px 0px var(--border-color);
+            transition: none; /* Remove smooth transitions for retro feel */
         }
 
-        button:hover {
+        button:hover, button:active {
             background-color: var(--text-color);
             color: var(--bg-color);
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: #fff;
-            border-color: var(--primary-color);
-        }
-
-        .btn-primary:hover {
-            background-color: #1a252f;
-            color: #fff;
+            box-shadow: 0px 0px 0px var(--border-color);
+            transform: translate(2px, 2px);
         }
 
         .btn-restart {
             position: fixed;
             top: 20px;
             right: 20px;
-            background-color: var(--danger-color);
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1rem;
-            border-radius: 6px;
+            background-color: #fff;
             z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .btn-restart:hover {
-            background-color: #c0392b;
-            color: #fff;
         }
 
         .btn-clear-history {
             font-size: 0.9rem;
             padding: 8px 15px;
             margin-top: 15px;
-            border: 1px solid var(--danger-color);
-            color: var(--danger-color);
-        }
-        
-        .btn-clear-history:hover {
-            background-color: var(--danger-color);
-            color: #fff;
         }
 
         .option-btn {
@@ -172,12 +176,15 @@
             width: 100%;
             max-width: 700px;
             margin: 40px auto;
+            border: 2px solid #000;
+            padding: 10px;
+            background: #fff;
         }
 
         .divider {
             width: 100%;
-            height: 1px;
-            background-color: #eee;
+            height: 2px;
+            background-color: #000;
             margin: 40px 0;
         }
 
@@ -187,12 +194,15 @@
             font-size: 1.1rem;
             line-height: 1.6;
             margin-bottom: 30px;
+            border: 2px dashed #000;
+            padding: 20px;
+            background: #fff;
         }
 
         .history-section {
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #eee;
+            border-top: 2px solid #000;
             text-align: center;
         }
 
@@ -205,25 +215,19 @@
         }
 
         .history-item {
-            background: #fdfdfd;
-            border: 1px solid #ddd;
+            background: #fff;
+            border: 2px solid #000;
             padding: 15px;
             margin-bottom: 10px;
-            border-radius: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        .history-date {
-            font-size: 0.9rem;
-            color: #666;
+            box-shadow: 2px 2px 0px #000;
         }
 
         .history-score {
             font-weight: bold;
             font-size: 1.2rem;
-            color: var(--primary-color);
         }
     </style>
 </head>
@@ -233,63 +237,81 @@
 
     <!-- START SCREEN -->
     <div id="start-screen" class="screen">
-        <h1 style="margin-bottom: 20px;">Tes Huruf Hilang</h1>
-        <ul class="instructions">
-            <li>Anda akan menyelesaikan 10 set, masing-masing 50 soal.</li>
-            <li>Sebelum setiap set, Anda memiliki waktu 10 detik untuk menghafal 5 huruf yang dipasangkan dengan opsi A, B, C, D, dan E.</li>
-            <li>Anda memiliki 1 menit per set untuk mengidentifikasi huruf mana yang hilang dari kelompok 4 huruf yang ditampilkan.</li>
-        </ul>
-        <br>
-        <button class="btn-primary" onclick="startTest()">Mulai Tes</button>
+        <div class="window-title-bar">
+            <div class="window-title-text">Welcome</div>
+        </div>
+        <div class="window-content">
+            <h1 style="margin-bottom: 20px;">Tes Huruf Hilang</h1>
+            <ul class="instructions">
+                <li>Anda akan menyelesaikan 10 set, masing-masing 50 soal.</li>
+                <li>Sebelum setiap set, Anda memiliki waktu 10 detik untuk menghafal 5 huruf yang dipasangkan dengan opsi A, B, C, D, dan E.</li>
+                <li>Anda memiliki 1 menit per set untuk mengidentifikasi huruf mana yang hilang dari kelompok 4 huruf yang ditampilkan.</li>
+            </ul>
+            <br>
+            <button onclick="startTest()">Mulai Tes</button>
 
-        <div class="history-section" id="history-section" style="display: none;">
-            <h3>Riwayat Skor Anda</h3>
-            <ul class="history-list" id="history-list"></ul>
-            <button class="btn-clear-history" onclick="clearHistory()">Hapus Riwayat</button>
+            <div class="history-section" id="history-section" style="display: none;">
+                <h3>Riwayat Skor Anda</h3>
+                <ul class="history-list" id="history-list"></ul>
+                <button class="btn-clear-history" onclick="clearHistory()">Hapus Riwayat</button>
+            </div>
         </div>
     </div>
 
     <!-- MEMORIZE SCREEN -->
     <div id="memorize-screen" class="screen">
-        <h2 id="memorize-set-title">Set 1 / 10</h2>
-        <p>Hafalkan huruf-huruf berikut:</p>
-        <div class="timer" id="memorize-timer">10</div>
-        <div class="symbols-row" id="memorize-symbols"></div>
+        <div class="window-title-bar">
+            <div class="window-title-text" id="memorize-set-title">Set 1 / 10</div>
+        </div>
+        <div class="window-content">
+            <p>Hafalkan huruf-huruf berikut:</p>
+            <div class="timer" id="memorize-timer">10</div>
+            <div class="symbols-row" id="memorize-symbols"></div>
+        </div>
     </div>
 
     <!-- TEST SCREEN -->
     <div id="test-screen" class="screen">
-        <h2 id="test-set-title">Set 1 / 10</h2>
-        <div class="timer" id="test-timer">60</div>
-        
-        <!-- Reference Letters -->
-        <div class="symbols-row" id="reference-symbols" style="transform: scale(0.8); margin: 0;"></div>
-        
-        <div class="divider"></div>
+        <div class="window-title-bar">
+            <div class="window-title-text" id="test-set-title">Set 1 / 10</div>
+        </div>
+        <div class="window-content">
+            <div class="timer" id="test-timer">60</div>
+            
+            <!-- Reference Letters -->
+            <div class="symbols-row" id="reference-symbols" style="transform: scale(0.8); margin: 0;"></div>
+            
+            <div class="divider"></div>
 
-        <!-- Question Letters (Only 4) -->
-        <div class="symbols-row" id="question-symbols"></div>
-        
-        <!-- Answer Options -->
-        <div class="options-row">
-            <button class="option-btn" onclick="submitAnswer('A')">A</button>
-            <button class="option-btn" onclick="submitAnswer('B')">B</button>
-            <button class="option-btn" onclick="submitAnswer('C')">C</button>
-            <button class="option-btn" onclick="submitAnswer('D')">D</button>
-            <button class="option-btn" onclick="submitAnswer('E')">E</button>
+            <!-- Question Letters (Only 4) -->
+            <div class="symbols-row" id="question-symbols"></div>
+            
+            <!-- Answer Options -->
+            <div class="options-row">
+                <button class="option-btn" onclick="submitAnswer('A')">A</button>
+                <button class="option-btn" onclick="submitAnswer('B')">B</button>
+                <button class="option-btn" onclick="submitAnswer('C')">C</button>
+                <button class="option-btn" onclick="submitAnswer('D')">D</button>
+                <button class="option-btn" onclick="submitAnswer('E')">E</button>
+            </div>
         </div>
     </div>
 
     <!-- RESULT SCREEN -->
     <div id="result-screen" class="screen">
-        <h1>Tes Selesai</h1>
-        <h2 id="final-score-display"></h2>
-        <p>Performa Anda di 10 set:</p>
-        <div class="chart-container">
-            <canvas id="resultsChart"></canvas>
+        <div class="window-title-bar">
+            <div class="window-title-text">Results</div>
         </div>
-        <div style="margin-top: 30px;">
-            <button class="btn-primary" onclick="goToStart()">Kembali ke Awal</button>
+        <div class="window-content">
+            <h1>Tes Selesai</h1>
+            <h2 id="final-score-display"></h2>
+            <p>Performa Anda di 10 set:</p>
+            <div class="chart-container">
+                <canvas id="resultsChart"></canvas>
+            </div>
+            <div style="margin-top: 30px;">
+                <button onclick="goToStart()">Kembali ke Awal</button>
+            </div>
         </div>
     </div>
 
@@ -318,7 +340,9 @@
         let timerInterval = null;
         let chartInstance = null;
 
-        // --- LocalStorage Logic for History ---
+        Chart.defaults.font.family = '"Chicago", "Geneva", "Arial", sans-serif';
+        Chart.defaults.color = '#000';
+
         function getHistory() {
             const history = localStorage.getItem('missingLettersHistory');
             return history ? JSON.parse(history) : [];
@@ -332,7 +356,7 @@
                 totalScore: totalScore,
                 scores: scoresArray
             };
-            history.unshift(newEntry); // Add to the beginning (newest first)
+            history.unshift(newEntry);
             localStorage.setItem('missingLettersHistory', JSON.stringify(history));
         }
 
@@ -367,7 +391,6 @@
             }
         }
 
-        // --- Session Logic ---
         window.onload = () => {
             renderHistory();
             const savedState = sessionStorage.getItem('missingLettersTestState');
@@ -585,15 +608,18 @@
                 data: {
                     labels: Array.from({length: TOTAL_SETS}, (_, i) => `Set ${i + 1}`),
                     datasets: [{
-                        label: 'Jawaban Benar (Max 50)',
+                        label: 'Jawaban Benar',
                         data: state.scores,
-                        borderColor: '#2c3e50',
-                        backgroundColor: 'rgba(44, 62, 80, 0.1)',
+                        borderColor: '#000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
                         borderWidth: 2,
                         fill: true,
-                        tension: 0.3,
-                        pointBackgroundColor: '#2c3e50',
-                        pointRadius: 4
+                        tension: 0, 
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#000',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
                     }]
                 },
                 options: {
@@ -601,11 +627,20 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 50
+                            max: 50,
+                            grid: { color: '#ccc' },
+                            ticks: { color: '#000' }
+                        },
+                        x: {
+                            grid: { color: '#ccc' },
+                            ticks: { color: '#000' }
                         }
                     },
                     plugins: {
-                        legend: { display: true }
+                        legend: { 
+                            display: true,
+                            labels: { color: '#000' }
+                        }
                     }
                 }
             });
