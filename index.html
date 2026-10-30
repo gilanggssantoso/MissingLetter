@@ -141,14 +141,13 @@
             cursor: pointer;
             box-shadow: 2px 2px 0px var(--border-color);
             transition: none;
-            -webkit-tap-highlight-color: transparent; /* Removes default blue tap highlight on mobile */
+            -webkit-tap-highlight-color: transparent;
         }
         
         select:focus {
             outline: none;
         }
 
-        /* Hover effect only applied to devices that support hovering (mouse/trackpad) */
         @media (hover: hover) {
             button:hover {
                 background-color: var(--text-color);
@@ -158,23 +157,11 @@
             }
         }
 
-        /* Active effect applies to physical clicks and screen taps */
         button:active {
             background-color: var(--text-color);
             color: var(--bg-color);
             box-shadow: 0px 0px 0px var(--border-color);
             transform: translate(2px, 2px);
-        }
-
-        .btn-restart {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            background-color: #fff;
-            z-index: 1000;
-            display: none;
-            padding: 8px 15px;
-            font-size: 1rem;
         }
 
         .btn-clear-history {
@@ -277,10 +264,20 @@
             font-size: 1.2rem;
         }
 
+        /* Container for the inline restart button below the test */
+        #inline-restart-container {
+            display: none;
+            margin-top: 25px;
+            margin-bottom: 20px;
+        }
+
         /* Mobile Responsive Adjustments - Fluid Layout */
         @media (max-width: 600px) {
             body {
                 padding: 5px; 
+            }
+            .screen {
+                margin-top: 15px; /* Less margin on mobile so everything fits */
             }
             .window-content {
                 padding: 15px 5px; 
@@ -301,10 +298,6 @@
             .symbol-label {
                 font-size: clamp(0.9rem, 4vw, 1.2rem);
             }
-            .btn-restart {
-                font-size: 0.9rem;
-                padding: 6px 12px;
-            }
             .stats-box {
                 font-size: 1rem;
                 padding: 15px;
@@ -313,8 +306,6 @@
     </style>
 </head>
 <body>
-
-    <button class="btn-restart" id="restart-btn" onclick="resetTest()">Ulang Tes</button>
 
     <!-- START SCREEN -->
     <div id="start-screen" class="screen active">
@@ -395,7 +386,7 @@
     <!-- RESULT SCREEN -->
     <div id="result-screen" class="screen">
         <div class="window-title-bar">
-            <div class="window-title-text">Hasil Tes</div>
+            <div class="window-title-text">Results</div>
         </div>
         <div class="window-content">
             <h1 style="margin-bottom: 20px;">Tes Selesai</h1>
@@ -417,13 +408,18 @@
         </div>
     </div>
 
+    <!-- INLINE RESTART BUTTON (Shown only during active tests) -->
+    <div id="inline-restart-container">
+        <button onclick="resetTest()" style="font-size: 1rem; padding: 10px 20px;">Ulang Tes</button>
+    </div>
+
     <script>
         const LETTER_POOL = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz'.split('');
         const OPTIONS = ['A', 'B', 'C', 'D', 'E'];
         
         const QUESTIONS_PER_SET = 50;
         const MEMORIZE_DURATION = 10;
-        const TEST_DURATION = 60; // Always 1 minute per set
+        const TEST_DURATION = 60; 
 
         let state = {
             phase: 'start', 
@@ -435,23 +431,19 @@
             currentMissingLetter: '',
             questionChars: [],
             timeLeft: 0,
-            totalSets: 10 // Default
+            totalSets: 10 
         };
 
         let timerInterval = null;
         let chartInstance = null;
-        const restartBtn = document.getElementById('restart-btn');
 
-        // Apply retro font to Chart.js
         Chart.defaults.font.family = '"Chicago", "Geneva", "Arial", sans-serif';
         Chart.defaults.color = '#000';
 
-        // Keyboard Support
         document.addEventListener('keydown', (event) => {
             if (state.phase === 'test') {
                 const key = event.key.toUpperCase();
                 if (OPTIONS.includes(key)) {
-                    // Add quick visual flash to the button
                     const buttons = document.querySelectorAll('.option-btn');
                     buttons.forEach(btn => {
                         if (btn.textContent === key) {
@@ -468,7 +460,6 @@
                             }, 100);
                         }
                     });
-                    // Submit answer
                     submitAnswer(key);
                 }
             }
@@ -558,10 +549,15 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             
-            if (screenId === 'start-screen') {
-                restartBtn.style.display = 'none';
+            const restartContainer = document.getElementById('inline-restart-container');
+            
+            // Disable scrolling only during active test phases, and show inline restart button
+            if (screenId === 'memorize-screen' || screenId === 'test-screen') {
+                document.body.style.overflow = 'hidden';
+                restartContainer.style.display = 'block';
             } else {
-                restartBtn.style.display = 'block';
+                document.body.style.overflow = 'auto';
+                restartContainer.style.display = 'none';
             }
         }
 
@@ -739,24 +735,17 @@
             showScreen('result-screen');
             clearState(); 
             
-            // Calculate Total
             const totalScore = state.scores.reduce((acc, val) => acc + val, 0);
-            
-            // Calculate Mean (Rata-rata)
             const mean = totalScore / state.totalSets;
             
-            // Calculate Variance (Deviasi dikuadratkan lalu dirata-rata)
             let sumSquaredDeviations = 0;
             state.scores.forEach(score => {
                 const deviation = score - mean;
                 sumSquaredDeviations += (deviation * deviation);
             });
             const variance = sumSquaredDeviations / state.totalSets; 
-            
-            // Calculate Standard Deviation
             const stdDev = Math.sqrt(variance);
 
-            // Determine Stability Interpretation
             let stabilityText = "";
             if (stdDev <= 1.5) {
                 stabilityText = "Sangat Baik / Sangat Stabil (Sangat konsisten, tahan terhadap kelelahan, kontrol emosi sangat baik)";
@@ -768,13 +757,11 @@
                 stabilityText = "Kurang / Tidak Stabil (Reaktivitas emosi tinggi, mudah bosan, atau cepat lelah di bawah tekanan)";
             }
 
-            // Display Values
             document.getElementById('stats-mean').innerText = mean.toFixed(2);
             document.getElementById('stats-variance').innerText = variance.toFixed(2);
             document.getElementById('stats-stddev').innerText = stdDev.toFixed(2);
             document.getElementById('stats-interpretation').innerText = stabilityText;
 
-            // Render Chart
             const ctx = document.getElementById('resultsChart').getContext('2d');
             if (chartInstance) {
                 chartInstance.destroy(); 
